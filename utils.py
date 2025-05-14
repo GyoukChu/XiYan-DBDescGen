@@ -89,7 +89,6 @@ def extract_simple_json_from_qwen(qwen_result) -> dict:
     qwen_result=qwen_result.replace('\n', '')
     pattern = r"```json(.*?)```"
 
-    # 使用re.DOTALL标志来使得点号(.)可以匹配包括换行符在内的任意字符
     sql_code_snippets = re.findall(pattern, qwen_result, re.DOTALL)
     data={}
     if len(sql_code_snippets) > 0:
@@ -97,15 +96,13 @@ def extract_simple_json_from_qwen(qwen_result) -> dict:
         try:
             data = eval(data)
         except:
-            find = re.findall('错误信息\':\'(.*)\'', data)
+            find = re.findall('error message\':\'(.*)\'', data)
             try:
                 if len(find)>0:
                     find_out = find[0].replace('\'','"')
                     data=data.replace(find[0],find_out)
                     data = eval(data)
                 else:
-
-                    #re.findall('错误信息\':\'(.*)\'', data)[0].replace('\'', '"')
                     if "]}" in data:
                         data = data.replace(']}', '}]')
                         data = eval(data)

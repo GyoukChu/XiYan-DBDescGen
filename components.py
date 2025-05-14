@@ -43,7 +43,7 @@ def understand_database(db_mschema: str = '', llm: Optional[LLM] = None):
 
 def generate_column_desc(field_name: str, field_info_str: str = '', table_mschema: str = '',
         llm: Optional[LLM] = None, sql: Optional[str] = None, sql_res: Optional[str] = None,
-        supp_info: Optional[str] = None, language: Optional[str] = 'CN'):
+        supp_info: Optional[str] = None, language: Optional[str] = 'EN'):
 
     if language == 'CN':
         prompt = DEFAULT_COLUMN_DESC_GEN_CHINESE_PROMPT
@@ -79,7 +79,7 @@ def generate_column_desc(field_name: str, field_info_str: str = '', table_mschem
 
 def generate_table_desc(table_name: str, table_mschema: str = '',
         llm: Optional[LLM] = None, sql: Optional[str] = None, sql_res: Optional[str] = None,
-        language: Optional[str] = 'CN'):
+        language: Optional[str] = 'EN'):
     if language == 'CN':
         prompt = DEFAULT_TABLE_DESC_GEN_CHINESE_PROMPT
     elif language == 'EN':
@@ -120,10 +120,6 @@ def understand_fields_by_category(db_info: str, table_name: str, table_mschema: 
 
 def field_category(field_type_cate: str, type_engine: TypeEngine, llm: Optional[LLM] = None,
                    field_info_str: str = ''):
-    """
-    Distinguish field category and whether dimension or measure.
-    is_unique_pk_cons: 是否为主键、外键或者唯一键（包含与其他字段共同构成联合的主键）
-    """
     code_res = {"category": type_engine.field_category_code_label,
                 "dim_or_meas": type_engine.dimension_label}
     enum_res = {"category": type_engine.field_category_enum_label,
@@ -144,11 +140,10 @@ def field_category(field_type_cate: str, type_engine: TypeEngine, llm: Optional[
         is_date_time = call_llm(
             DEFAULT_IS_DATE_TIME_FIELD_PROMPT, **kwargs
         ).strip()
-        if is_date_time == '是':
+        if is_date_time == 'yes':
             return date_res
         else:
             if field_type_cate == type_engine.field_type_string_label:
-                # 非时间日期类字符串，判断是code、text还是enum
                 res = call_llm(
                     DEFAULT_STRING_CATEGORY_FIELD_PROMPT, **kwargs
                 ).strip().lower()
@@ -159,7 +154,6 @@ def field_category(field_type_cate: str, type_engine: TypeEngine, llm: Optional[
                 else:
                     return code_res
             elif field_type_cate == type_engine.field_type_number_label:
-                # 非时间日期类的数值，判断是code、measure还是enum
                 res = call_llm(DEFAULT_NUMBER_CATEGORY_FIELD_PROMPT, **kwargs).strip().lower()
                 if res == 'enum':
                     return enum_res

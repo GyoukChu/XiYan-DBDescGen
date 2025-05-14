@@ -1,0 +1,190 @@
+【DB_ID】 mimic_iv                                                                                                                                                                                                     
+【Schema】                                                                                                                                                                                                             
+# Table: admissions, The admissions table records detailed information for each hospital admission, including patient identifiers, admission and discharge timestamps, admission type and source, discharge destination, insurance type, language, marital status, and age. Each row represents a unique hospital stay, enabling analysis across patient demographics, admission reasons, insurance coverage, and time-based metrics such as length of stay or admission trends.                                                                                                                                                                                     
+[                                                                                                                                                                                                                      
+(row_id:INTEGER, Unique technical identifier for each row in the admissions table; no clinical meaning., Primary Key, Examples: [0, 1, 2]),                                                                            
+(subject_id:INTEGER, Unique identifier for each patient across all admissions., Examples: [10004235, 10009628, 10006053]),
+(hadm_id:INTEGER, Unique identifier for a specific hospital admission (hospital stay)., Examples: [20199380, 20285402, 20291550]),
+(admittime:TIMESTAMP, Timestamp indicating when the patient was admitted to the hospital for this admission., Examples: [2100-03-19 14:38:00]),
+(dischtime:TIMESTAMP, Timestamp when the patient was discharged from the hospital for this admission., Examples: [2100-03-28 14:02:00]),
+(admission_type:VARCHAR, Indicates the clinical reason or urgency for the patient's hospital admission., Examples: [urgent, elective, ew emer.]),
+(admission_location:VARCHAR, Source or location from which the patient was admitted to the hospital., Examples: [transfer from hospital]),
+(discharge_location:VARCHAR, Indicates where the patient was discharged to after their hospital stay., Examples: [skilled nursing facility]),                                                                          
+(insurance:VARCHAR, Type of insurance coverage for the patient during the hospital admission., Examples: [medicaid, other, medicare]),                                                                                 
+(language:VARCHAR, Primary language spoken by the patient during the hospital admission., Examples: [english, ?]),                                                                                                     
+(marital_status:VARCHAR, Patient's marital status at time of hospital admission (e.g., single, married, widowed, divorced)., Examples: [single, married, widowed]),                                                    
+(age:INTEGER, Patient's age in years at the time of hospital admission., Examples: [47, 58, 52])                                                                                                                       
+]                                                                                                                                                                                                                      
+# Table: cost, The 'cost' table records the monetary charges for specific clinical events or services incurred by patients during hospital admissions. Each row details the cost associated with an event type (e.g., diagnosis, lab test, procedure), linked to a patient (subject_id), admission (hadm_id), and timestamp (chargetime). The table enables analysis of healthcare costs across patients, admissions, event types, and time.  
+[                                                                                                                                                                                                                      
+(row_id:INTEGER, Unique identifier for each row; primary key with no clinical meaning., Primary Key, Examples: [0, 1, 2]),                                                                                             
+(subject_id:INTEGER, Unique identifier for each patient across the database., Examples: [10035185, 10009049, 10009035]),                                                                                               
+(hadm_id:INTEGER, Unique identifier for a single hospital admission of a patient., Examples: [22580999, 22995465, 28324362]),                                                                                          
+(event_type:VARCHAR, Type of clinical event or resource associated with the recorded cost., Examples: [diagnoses_icd, labevents, procedures_icd]),                                                                     
+(event_id:INTEGER, Identifier for a specific event within an event type and hospital admission., Examples: [0, 1, 2]),                                                                                                 
+(chargetime:TIMESTAMP, Timestamp indicating when the cost was incurred or charged for the event., Examples: [2100-05-17 12:53:00]),                                                                                    
+(cost:REAL, Monetary amount charged for a specific clinical event or service., Examples: [7.14, 5.62, 6.83])                                                                                                           
+]
+# Table: microbiologyevents, The 'microbiologyevents' table records microbiology test events for hospital patients, capturing each event's unique ID, patient and admission identifiers, specimen collection timestamp, specimen type, test name, and identified organism (if any). Data is organized by patient, hospital admission, specimen type, test performed, and event time, enabling analysis of microbiological findings across patients and time.
+[
+(row_id:INTEGER, Unique identifier for each microbiology event record; primary key for the table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient in the database., Examples: [10000032, 10020944, 10037975]),
+(hadm_id:INTEGER, Unique identifier for a specific hospital admission (hospital stay)., Examples: [25742920, 22595853, 29079034]),
+(charttime:TIMESTAMP, Timestamp when the microbiology event or specimen collection occurred., Examples: [2100-08-26 20:35:00]),
+(spec_type_desc:VARCHAR, Type of specimen collected for microbiology testing (e.g., blood, urine, swab)., Examples: [swab, serology/blood, urine]),
+(test_name:VARCHAR, Name of the microbiology test performed or ordered for the specimen., Examples: [r/o vancomycin resistant enterococcus]),
+(org_name:VARCHAR, Name of the organism identified in the microbiology test result, or NULL if none detected., Examples: [enterococcus sp.])
+]
+# Table: transfers, The 'transfers' table records patient transfer events within a hospital, capturing each event's unique ID, patient, and admission identifiers. It details the type of transfer (admit, transfer, discharge, etc.), the care unit involved, and timestamps for when the transfer started and ended. The table enables analysis of patient movement and care transitions across time, care units, and hospital admissions.
+[
+(row_id:INTEGER, Unique identifier for each transfer record; primary key for the table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient in the database., Examples: [10009049, 10025612, 10020786]),
+(hadm_id:INTEGER, Unique identifier for each hospital admission (stay) of a patient., Examples: [22995465, 23403708, 23488445]),
+(transfer_id:INTEGER, Unique identifier for each patient transfer event within a hospital admission., Examples: [30030230, 32533329, 37922399]),
+(eventtype:VARCHAR, Type of patient transfer event, such as admit, transfer, discharge, or emergency department., Examples: [discharge, transfer, admit]),
+(careunit:VARCHAR, Name of the hospital care unit or ward involved in the transfer event., Examples: [med/surg, medicine, vascular]),
+(intime:TIMESTAMP, Timestamp when the patient entered the care unit or transfer event began., Examples: [2100-06-18 14:21:47]),
+(outtime:TIMESTAMP, Timestamp when the patient left a care unit or status during a transfer event., Examples: [2100-01-22 11:53:26])
+]
+# Table: d_icd_procedures, The d_icd_procedures table stores reference data mapping standardized ICD-9 and ICD-10 procedure codes (icd_code) to their full human-readable descriptions (long_title). Each row represents a unique procedure code and description pair, identified by row_id. The table does not contain metric or time-based data, but serves as a lookup for interpreting procedure codes in clinical datasets.
+[
+(row_id:INTEGER, Unique surrogate key for each procedure code and description pair., Primary Key, Examples: [0, 1, 2]),
+(icd_code:VARCHAR, Standardized code identifying a specific medical procedure (ICD-9 or ICD-10)., Examples: [icd10|001, icd10|0016070, icd10|0016071]),
+(long_title:VARCHAR, Full human-readable description of the medical procedure corresponding to the ICD code., Examples: [other computer assisted surgery])
+]
+# Table: inputevents, The inputevents table records detailed information on input events (such as fluid or medication administration) for ICU patients. Each record includes the patient, hospital admission, and ICU stay identifiers, the timestamp of administration, the type of input (itemid), the total amount given, and its unit. Data is organized by patient, admission, ICU stay, input type, and time, enabling analysis of administered inputs over time and across patient encounters.
+[
+(row_id:INTEGER, Unique identifier for each input event record; primary key of the table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient across the database., Examples: [10005817, 10027445, 10020740]),
+(hadm_id:INTEGER, Unique identifier for a single hospital admission (encounter) for a patient., Examples: [20626031, 29163082, 25826145]),
+(stay_id:INTEGER, Unique identifier for a single ICU stay within a hospital admission., Examples: [32604416, 36084484, 32145159]),
+(starttime:TIMESTAMP, Timestamp indicating when the input event (e.g., fluid administration) started., Examples: [2100-12-23 20:10:00]),
+(itemid:INTEGER, Identifier for the type of input (e.g., fluid or medication) administered., Examples: [221456, 220949, 223258]),
+(totalamount:REAL, Total amount of input (e.g., fluid or drug) administered, as measured in the specified unit., Examples: [100.0, 250.0, 500.0]),
+(totalamountuom:VARCHAR, Unit of measurement for the total amount administered in the input event, e.g., ml., Examples: [ml])
+]
+# Table: patients, The 'patients' table stores demographic information for each patient, including a unique row and subject identifier, gender (male or female), date of birth (dob), and date of death (dod, if applicable). The table enables analysis across patient identity, gender, and time dimensions such as birth and death dates, supporting cohort and survival studies.
+[
+(row_id:INTEGER, Unique technical identifier for each row; primary key of the patients table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient, used to link patient data across tables., Examples: [10000032, 10001217, 10001725]),
+(gender:VARCHAR, Patient's biological sex, coded as 'm' for male or 'f' for female., Examples: [f, m]),
+(dob:TIMESTAMP, Patient's date of birth, used to calculate age and define demographic cohorts., Examples: [2079-07-22 00:00:00]),
+(dod:TIMESTAMP, Timestamp of patient death; NULL if patient is alive or death not recorded., Examples: [2100-12-20 00:00:00])
+]
+# Table: d_icd_diagnoses, This table stores standardized diagnosis codes (ICD-9 and ICD-10) used for medical conditions, along with their full clinical descriptions. Each record is uniquely identified by a row ID. The table provides a reference for interpreting diagnosis codes but does not include patient, encounter, or time-related information.
+[
+(row_id:INTEGER, Unique internal identifier for each diagnosis record., Primary Key, Examples: [0, 1, 2]),
+(icd_code:VARCHAR, Standardized ICD-9 or ICD-10 diagnosis code for a medical condition., Examples: [icd10|a00, icd10|a000, icd10|a001]),
+(long_title:VARCHAR, Full text description of the diagnosis code for clinical interpretation.)
+]
+# Table: labevents, The labevents table records individual laboratory test results for patients during hospital admissions. Each row represents a specific lab test (itemid) performed for a patient (subject_id) during a hospital stay (hadm_id) at a given time (charttime), including the numeric result (valuenum) and its unit (valueuom). The table enables analysis of lab metrics across patients, admissions, test types, and time.
+[
+(row_id:INTEGER, Unique identifier for each lab event record; primary key for the labevents table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient across the database., Examples: [10031757, 10007818, 10020944]),
+(hadm_id:INTEGER, Unique identifier for a patient's hospital admission (hospital stay)., Examples: [28477280, 22987108, 29974575]),
+(itemid:INTEGER, Unique identifier for the type of laboratory test performed., Examples: [50970, 50931, 50868]),
+(charttime:TIMESTAMP, Timestamp when the lab sample was collected or resulted., Examples: [2100-10-25 02:00:00]),
+(valuenum:REAL, Numeric result of the lab test; value depends on test type and unit., Examples: [2.8, 91.0, 14.0]),
+(valueuom:VARCHAR, Unit of measurement for the lab test value, such as mg/dl or meq/l., Examples: [mg/dl, meq/l, g/dl])
+]
+# Table: d_labitems, The d_labitems table stores metadata for laboratory tests and measurements, including a unique row identifier (row_id), a unique test code (itemid), and a human-readable test label (label). It catalogs available lab tests but does not contain actual measurement values or time-related data. Each row represents a distinct lab test or measurement type.
+[
+(row_id:INTEGER, Unique technical identifier for each row in the lab items table., Primary Key, Examples: [0, 1, 2]),
+(itemid:INTEGER, Unique code identifying a specific laboratory test or measurement., Examples: [50801, 50802, 50803]),
+(label:VARCHAR, Human-readable name or description of the laboratory test or measurement., Examples: [free calcium, tidal volume, lactate])
+]
+# Table: diagnoses_icd, The 'diagnoses_icd' table records ICD diagnosis codes assigned to patients during hospital admissions. Each row represents a unique diagnosis event, identified by row_id, and is linked to a specific patient (subject_id) and hospital admission (hadm_id). The icd_code field captures the diagnosis, while charttime provides the timestamp of when the diagnosis was recorded, enabling analysis across patient, admission, diagnosis, and time dimensions.
+[
+(row_id:INTEGER, Unique identifier for each diagnosis record; used for database management, not clinical analysis., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient across the database., Examples: [10035185, 10009049, 10009035]),
+(hadm_id:INTEGER, Unique identifier for a single hospital admission of a patient., Examples: [22580999, 22995465, 28324362]),
+(icd_code:VARCHAR, ICD diagnosis code assigned to the patient during the hospital admission., Examples: [icd9|4139, icd9|v707, icd9|41401]),
+(charttime:TIMESTAMP, Timestamp when the diagnosis was recorded during the hospital admission., Examples: [2100-05-17 12:53:00])
+]
+# Table: prescriptions, The prescriptions table records detailed information on medication orders for hospital patients. Each row represents a unique prescription, identified by row_id, and includes patient (subject_id), hospital admission (hadm_id), drug name, dose, unit, administration route, and the start and stop timestamps of the prescription. This enables analysis of medication usage across patients, admissions, drugs, dosages, and time periods.
+[
+(row_id:INTEGER, Unique identifier for each prescription record; primary key of the table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient in the prescriptions table., Examples: [10020740, 10005817, 10019385]),
+(hadm_id:INTEGER, Unique identifier for a specific hospital admission event., Examples: [23831430, 20626031, 20297618]),
+(starttime:TIMESTAMP, Timestamp when the prescription starts or the drug is first ordered/administered., Examples: [2100-04-19 11:00:00]),
+(stoptime:TIMESTAMP, Timestamp when the prescription ends or is discontinued., Examples: [2100-04-20 22:00:00]),
+(drug:VARCHAR, Name of the medication prescribed in each prescription record., Examples: [insulin]),
+(dose_val_rx:VARCHAR, Prescribed dose amount for the medication, recorded as a string value., Examples: [0.0, 125.0, 15.0]),
+(dose_unit_rx:VARCHAR, Unit of measurement for the prescribed drug dose (e.g., mg, ml, tab)., Examples: [unit, neb, mg]),
+(route:VARCHAR, Route of drug administration, indicating how the medication is delivered to the patient., Examples: [sc, ih, oral])
+]
+# Table: icustays, The 'icustays' table records individual ICU or stepdown unit stays for patients, identified by unique stay, admission, and patient IDs. It captures the first and last care units involved, along with precise admission (intime) and discharge (outtime) timestamps, enabling analysis of ICU stay durations, patient movement between units, and temporal patterns of ICU admissions across different care units.
+[
+(row_id:INTEGER, Unique technical identifier for each row; primary key with no clinical meaning., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient across the entire database., Examples: [10018328, 10020187, 10020740]),
+(hadm_id:INTEGER, Unique identifier for a single hospital admission (hospital stay)., Examples: [23786647, 24104168, 25826145]),
+(stay_id:INTEGER, Unique identifier for a single ICU stay within a hospital admission., Examples: [30425410, 30458995, 30585761]),
+(first_careunit:VARCHAR, The first ICU or stepdown unit the patient entered during this ICU stay., Examples: [neuro stepdown]),
+(last_careunit:VARCHAR, The final ICU or stepdown unit where the patient stayed during this ICU admission., Examples: [neuro stepdown]),
+(intime:TIMESTAMP, Timestamp when the patient entered the ICU or stepdown unit for this stay., Examples: [2100-05-07 23:03:44]),
+(outtime:TIMESTAMP, Timestamp when the patient left the ICU or stepdown unit for this stay., Examples: [2100-05-15 15:55:21])
+]
+# Table: outputevents, The 'outputevents' table records patient output measurements (e.g., urine, drain) in the ICU, capturing the amount (value and unit) for each event. Data is organized by patient, hospital admission, ICU stay, and timestamp, with each record specifying the type of output (itemid). This enables tracking of patient fluid output over time and across different hospitalizations and ICU stays.
+[
+(row_id:INTEGER, Unique identifier for each output event record; primary key for the table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient in the database., Examples: [10027602, 10029291, 10002495]),
+(hadm_id:INTEGER, Unique identifier for a patient's hospital admission., Examples: [28166872, 22205327, 24982426]),
+(stay_id:INTEGER, Unique identifier for a specific ICU stay within a hospital admission., Examples: [32391858, 36059427, 35146796]),
+(charttime:TIMESTAMP, Timestamp of when the output event was recorded., Examples: [2100-12-04 12:00:00]),
+(itemid:INTEGER, Identifier for the type of output event measured (e.g., urine, drain, etc.)., Examples: [226559, 227510, 226580]),
+(value:REAL, Measured amount of patient output (e.g., urine, drain) for a specific event., Examples: [150.0, 10.0, 15.0]),
+(valueuom:VARCHAR, Unit of measurement for the recorded output value, such as milliliters (ml)., Examples: [ml])
+]
+# Table: procedures_icd, The procedures_icd table records medical procedures performed on patients during hospital admissions. Each row represents a unique procedure, identified by a standardized ICD code, linked to a specific patient (subject_id) and hospital admission (hadm_id). The table includes the timestamp (charttime) when the procedure was performed or recorded, allowing analysis across patient, admission, procedure type, and time dimensions.
+[
+(row_id:INTEGER, Unique identifier for each procedure record; primary key for the table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Anonymized unique identifier for each patient in the database., Examples: [10011398, 10014729, 10007818]),
+(hadm_id:INTEGER, Unique identifier for a single hospital admission or patient encounter., Examples: [27505812, 23300884, 28889419]),
+(icd_code:VARCHAR, Standardized code identifying the type of medical procedure performed (ICD system)., Examples: [icd9|3961, icd9|3615, icd9|3614]),
+(charttime:TIMESTAMP, Timestamp when the procedure was performed or recorded., Examples: [2100-12-30 13:37:00])
+]
+# Table: chartevents, The chartevents table records time-stamped clinical measurements and observations for ICU patients. Each row captures a specific metric (itemid) with its numeric value and unit (valuenum, valueuom) for a patient (subject_id), hospital admission (hadm_id), and ICU stay (stay_id) at a given charttime. This enables tracking of patient vitals and clinical parameters over time and across different hospitalizations and ICU stays.
+[
+(row_id:INTEGER, Unique identifier for each event or row in the chartevents table., Primary Key, Examples: [0, 1, 2]),
+(subject_id:INTEGER, Unique identifier for each patient across all hospital admissions and ICU stays., Examples: [10005817, 10027445, 10020740]),
+(hadm_id:INTEGER, Unique identifier for a single hospital admission of a patient., Examples: [20626031, 29163082, 25826145]),
+(stay_id:INTEGER, Unique identifier for a single ICU stay within a hospital admission., Examples: [32604416, 36084484, 32145159]),
+(itemid:INTEGER, Identifier for the type of clinical measurement or observation recorded in the chart., Examples: [220210, 220051, 223762]),
+(charttime:TIMESTAMP, Timestamp when the clinical measurement or observation was recorded., Examples: [2100-12-24 00:00:00]),
+(valuenum:REAL, Numeric value of a clinical measurement, defined by itemid and unit, at a specific time., Examples: [19.0, 37.0, 58.0]),
+(valueuom:VARCHAR, Unit of measurement for the recorded clinical value (e.g., mmHg, bpm, °C)., Examples: [insp/min, mmhg, °c])
+]
+# Table: d_items, The d_items table defines clinical item metadata used in event data tables. Each row represents a unique clinical item, identified by itemid, with descriptive labels and abbreviations. The table specifies which event table (linksto) contains the item's recorded values. It does not store metric values or time-based data, but serves as a reference for interpreting event records across various clinical dimensions.
+[
+(row_id:INTEGER, Unique internal identifier for each row in the d_items table; primary key., Primary Key, Examples: [0, 1, 2]),
+(itemid:INTEGER, Unique identifier for a clinical item used to link event data to item definitions., Examples: [220001, 220045, 220046]),
+(label:VARCHAR, Human-readable name or description of the clinical item represented by itemid., Examples: [gender, race, suction events (ch)]),
+(abbreviation:VARCHAR, Short or alternative name for the item, used for concise display or reference., Examples: [gender, race, suction events (ch)]),
+(linksto:VARCHAR, Indicates which event table contains data for this item., Examples: [chartevents, outputevents, inputevents])
+]
+【Foreign keys】
+admissions.subject_id=patients.subject_id
+cost.hadm_id=admissions.hadm_id
+cost.event_id=diagnoses_icd.row_id
+cost.event_id=procedures_icd.row_id
+cost.event_id=labevents.row_id
+cost.event_id=prescriptions.row_id
+microbiologyevents.hadm_id=admissions.hadm_id
+transfers.hadm_id=admissions.hadm_id
+inputevents.hadm_id=admissions.hadm_id
+inputevents.stay_id=icustays.stay_id
+inputevents.itemid=d_items.itemid
+labevents.hadm_id=admissions.hadm_id
+labevents.itemid=d_labitems.itemid
+diagnoses_icd.hadm_id=admissions.hadm_id
+diagnoses_icd.icd_code=d_icd_diagnoses.icd_code
+prescriptions.hadm_id=admissions.hadm_id
+icustays.hadm_id=admissions.hadm_id
+outputevents.hadm_id=admissions.hadm_id
+outputevents.stay_id=icustays.stay_id
+outputevents.itemid=d_items.itemid
+procedures_icd.hadm_id=admissions.hadm_id
+procedures_icd.icd_code=d_icd_procedures.icd_code
+chartevents.hadm_id=admissions.hadm_id
+chartevents.stay_id=icustays.stay_id
+chartevents.itemid=d_items.itemid

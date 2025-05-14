@@ -89,10 +89,6 @@ class MSchema:
             return {}
 
     def get_category_fields(self, category: str, table_name: str) -> List:
-        """
-        给定table_name和category，获取当前table下所有category类型的字段名称
-        category: 从type_engine.field_category_all_labels中取值
-        """
         assert category in self.type_engine.field_category_all_labels, \
                         'Invalid category {}'.format(category)
         if self.has_table(table_name):
@@ -135,7 +131,6 @@ class MSchema:
                 output.append(f"# Table: {table_name}")
 
         field_lines = []
-        # 处理表中的每一个字段
         for field_name, field_info in table_info['fields'].items():
             if selected_columns is not None and field_name.lower() not in selected_columns:
                 continue
@@ -145,12 +140,10 @@ class MSchema:
             if len(field_info['comment']) > 0:
                 field_line += f", {field_info['comment'].strip()}"
 
-            ## 打上主键标识
             is_primary_key = field_info.get('primary_key', False)
             if is_primary_key:
                 field_line += f", Primary Key"
 
-            # 如果有示例，添加上
             if len(field_info.get('examples', [])) > 0 and example_num > 0:
                 examples = field_info['examples']
                 examples = [s for s in examples if s is not None]
@@ -185,11 +178,6 @@ class MSchema:
 
     def to_mschema(self, selected_tables: List = None, selected_columns: List = None,
                    example_num=3, show_type_detail=False) -> str:
-        """
-        convert to a MSchema string.
-        selected_tables: 默认为None，表示选择所有的表
-        selected_columns: 默认为None，表示所有列全选，格式['table_name.column_name']
-        """
         output = []
 
         output.append(f"【DB_ID】 {self.db_id}")
@@ -201,7 +189,6 @@ class MSchema:
             selected_columns = [s.lower() for s in selected_columns]
             selected_tables = [s.split('.')[0].lower() for s in selected_columns]
 
-        # 依次处理每一个表
         for table_name, table_info in self.tables.items():
             if selected_tables is None or table_name.lower() in selected_tables:
                 column_names = list(table_info['fields'].keys())
@@ -211,7 +198,6 @@ class MSchema:
                     cur_selected_columns = selected_columns
                 output.append(self.single_table_mschema(table_name, cur_selected_columns, example_num, show_type_detail))
 
-        # 添加外键信息，选择table_type为view时不展示外键
         if self.foreign_keys:
             output.append("【Foreign keys】")
             for fk in self.foreign_keys:

@@ -23,7 +23,6 @@ class TypeEngine:
         return 'mssql'
 
     def field_type_abbr(self, field_type: str):
-        """字段类型缩写，用于在MSchema中展示"""
         return field_type.split("(")[0]
 
     @property
@@ -88,7 +87,6 @@ class TypeEngine:
         return ['ENUM', 'SET']
 
     def field_type_cate(self, field_type: str) -> str:
-        """根据数据类型分组"""
         field_type = self.field_type_abbr(field_type.upper())
         if field_type in self.all_number_types:
             return self.field_type_number_label
@@ -103,7 +101,6 @@ class TypeEngine:
 
     @property
     def date_time_min_grans(self):
-        """时间日期类字段的最小颗粒度"""
         return ['YEAR', 'MONTH', 'DAY', 'QUARTER', 'WEEK', 'HOUR', 'MINUTE',
                 'SECOND', 'MILLISECOND', 'MICROSECOND', 'OTHER']
 

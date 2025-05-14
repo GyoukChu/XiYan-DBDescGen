@@ -59,7 +59,7 @@ class SchemaEngine(SQLDatabase):
     def get_table_comment(self, table_name: str):
         try:
             return self._inspector.get_table_comment(table_name, self._schema)['text']
-        except: # sqlite不支持添加注释
+        except:
             return ''
 
     def default_schema_name(self) -> Optional[str]:
@@ -75,11 +75,9 @@ class SchemaEngine(SQLDatabase):
         return self._inspector.get_foreign_keys(table_name, self._schema)
 
     def get_unique_constraints(self, table_name: str):
-        # 唯一键
         return self._inspector.get_unique_constraints(table_name, self._schema)
 
     def get_indexes(self, table_name: str):
-        # 索引字段
         return self._inspector.get_indexes(table_name, self._schema)
 
     def add_semicolon_to_sql(self, sql_query: str):
@@ -121,9 +119,6 @@ class SchemaEngine(SQLDatabase):
                 return {"truncated_results": records, "fields": []}
 
     def trunc_result_to_markdown(self, sql_res: Dict) -> str:
-        """
-        数据库查询结果转换成markdown格式
-        """
         truncated_results = sql_res.get("truncated_results", [])
         fields = sql_res.get("fields", [])
 
@@ -150,10 +145,10 @@ class SchemaEngine(SQLDatabase):
                 result = future.result(timeout=timeout)
                 return result
             except TimeoutError:
-                print(f"SQL执行超时（{timeout}秒）{sql_query}.")
+                print(f"SQL execution timeout（{timeout}s）{sql_query}.")
                 return None
             except Exception as e:
-                print("执行SQL时发生异常。", e)
+                print("An exception occurred while executing SQL. ", e)
                 return None
 
     def get_protected_table_name(self, table_name: str) -> str:
@@ -184,7 +179,6 @@ class SchemaEngine(SQLDatabase):
             self._mschema.add_table(table_name, fields={}, comment=table_comment)
             pks = self.get_pk_constraint(table_name)
 
-            # 数据表的唯一键
             unique_keys = []
             unique_constraints = self.get_unique_constraints(table_name)
             for u_con in unique_constraints:
@@ -192,7 +186,6 @@ class SchemaEngine(SQLDatabase):
                 unique_keys.append(column_names)
             self._mschema.tables[table_name]['unique_keys'] = unique_keys
 
-            # 数据表索引
             indexes = self.get_indexes(table_name)
             keys = []
             for index in indexes:
@@ -339,9 +332,6 @@ class SchemaEngine(SQLDatabase):
         return sql
 
     def get_single_field_info_str(self, table_name: str, field_name: str)->str:
-        """
-        某一列的相关信息：列名、类型、列描述、是否主键、最大/最小值等
-        """
         field_info = self._mschema.get_field_info(table_name, field_name)
         field_type = field_info.get('type', '')
 
@@ -357,15 +347,15 @@ class SchemaEngine(SQLDatabase):
         primary_key = field_info.get("primary_key", False)
         nullable = field_info.get("nullable", True)
 
-        field_info_str = ['【字段信息】', f'字段名称: {field_name}', f'字段类型: {field_type}']
+        field_info_str = ['【Field Information】', f'Field name: {field_name}', f'Field type: {field_type}']
         dim_or_meas = field_info.get('dim_or_meas', '')
         unique = field_info.get('unique', False)
         if primary_key:
             unique = True
 
         if len(comment) > 0:
-            field_info_str.append(f'字段描述: {comment}')
-        field_info_str.append(f'是否为主键(或者与其他字段组成联合主键): {primary_key}')
+            field_info_str.append(f'Field Description: {comment}')
+        field_info_str.append(f'Is it a primary key (or a joint primary key with other fields): {primary_key}')
         field_info_str.append(f'UNIQUE: {unique}')
         field_info_str.append(f'NULLABLE: {nullable}')
         date_min_gran = field_info.get('date_min_gran', None)
@@ -386,7 +376,7 @@ class SchemaEngine(SQLDatabase):
         if dim_or_meas in self._type_engine.dim_measure_labels:
             field_info_str.append(f'Dimension/Measure: {dim_or_meas}')
         if date_min_gran is not None:
-            field_info_str.append(f'该字段表示的语义可能与日期或时间有关，推测它表示的最小时间颗粒度是: {date_min_gran}')
+            field_info_str.append(f'The semantics of this field may be related to date or time. It is speculated that the minimum time granularity it represents is: {date_min_gran}')
 
         value_examples = self.get_column_value_examples(table_name, field_name, max_rows=10, max_str_len=30)
         if len(value_examples) > 0:
@@ -409,12 +399,11 @@ class SchemaEngine(SQLDatabase):
                 print(res)
                 if res['category'] == self._type_engine.field_category_date_label:
                     min_gran = understand_date_time_min_gran(field_info_str, llm=self._llm)
-                    print("最小时间颗粒度：", min_gran)
+                    print("Minimum time granularity：", min_gran)
                     if min_gran in self._type_engine.date_time_min_grans:
                         self._mschema.set_column_property(table_name, field_name, "date_min_gran", min_gran)
 
                 category = res['category']
-                # 对于枚举类型的字段，获取它所有的枚举候选值
                 if category == self._type_engine.field_category_enum_label:
                     examples = self.get_column_value_examples(table_name, field_name)
                     examples = [s for s in examples if len(str(examples)) > 0]
@@ -424,15 +413,6 @@ class SchemaEngine(SQLDatabase):
 
 
     def table_and_column_desc_generation(self, language: str='CN'):
-        """"
-        table and column description genration
-
-        四种模式：
-        no_comment: 不带任何描述信息
-        origin: 跟数据库中保持一致
-        generation: 清除已有的描述信息，完全由模型生成
-        merge: 没有描述的生成描述信息；已经有描述信息的，不再生成
-        """
         if self.comment_mode == 'origin':
             return
         elif self.comment_mode == 'merge':
@@ -448,7 +428,6 @@ class SchemaEngine(SQLDatabase):
             raise NotImplementedError(f"Unsupported comment mode {self.comment_mode}.")
 
         db_mschema = self._mschema.to_mschema()
-        """1、初步理解数据库的基本信息和每张表的内容"""
         db_info = understand_database(db_mschema, self._llm)
         self._mschema.db_info = db_info
         print("DB INFO: ", db_info)
@@ -467,7 +446,6 @@ class SchemaEngine(SQLDatabase):
             res = self.fetch_truncated(sql, max_rows=10)
             res = self.trunc_result_to_markdown(res)
 
-            """2、按照维度和度量分类，理解各个维度/度量字段之间的区别与联系，供参考"""
             supp_info = {}
             dim_fields = self._mschema.get_dim_or_meas_fields(self._type_engine.dimension_label, table_name)
             mea_fields = self._mschema.get_dim_or_meas_fields(self._type_engine.measure_label, table_name)
@@ -480,12 +458,11 @@ class SchemaEngine(SQLDatabase):
             print("Supplementary information：")
             print(supp_info)
 
-            """3、对每一列生成列描述"""
             for field_name, field_info in fields.items():
                 field_info_str = self.get_single_field_info_str(table_name, field_name)
                 dim_or_meas = field_info.get("dim_or_meas", '')
                 field_desc = field_info.get('comment', '')
-                if len(field_desc) == 0:  # 原来没有字段描述，重新生成
+                if len(field_desc) == 0:
                     field_desc = generate_column_desc(field_name, field_info_str, table_mschema,
                                                       self._llm, sql, res, supp_info.get(dim_or_meas, ""),
                                                       language=language)
@@ -493,7 +470,6 @@ class SchemaEngine(SQLDatabase):
                     print("Column Description: {}".format(field_desc))
                     self._mschema.set_column_property(table_name, field_name, 'comment', field_desc)
 
-            """4、表描述生成"""
             table_mschema = self._mschema.single_table_mschema(table_name)
             if need_table_comment:
                 table_desc = generate_table_desc(table_name, table_mschema, self._llm, sql, res, language=language)
